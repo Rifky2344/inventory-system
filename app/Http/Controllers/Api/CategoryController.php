@@ -16,7 +16,7 @@ class CategoryController extends Controller
         $categories = Category::query()
             ->with('parent')
             ->orderBy('name')
-            ->paginate(20)
+            ->paginate(request('per_page', 20))
             ->withQueryString();
 
         return CategoryResource::collection($categories);

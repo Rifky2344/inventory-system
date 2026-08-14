@@ -58,6 +58,26 @@ class ItemController extends Controller
     {
         $data = $request->validated();
 
+        if ($request->boolean('auto_sku')) {
+            $category = Category::find($data['category_id']);
+            $prefix = $category->category_code ?: 'ITM';
+            
+            // Get latest SKU with this prefix to determine the next number
+            $latest = Item::where('sku', 'like', $prefix . '-%')
+                ->orderBy('sku', 'desc')
+                ->first();
+                
+            $nextNumber = 1;
+            if ($latest) {
+                $parts = explode('-', $latest->sku);
+                $lastNum = (int) end($parts);
+                $nextNumber = $lastNum + 1;
+            }
+            $data['sku'] = $prefix . '-' . str_pad((string)$nextNumber, 3, '0', STR_PAD_LEFT);
+        }
+
+        unset($data['auto_sku']);
+
         if ($request->hasFile('image')) {
             $data['image_path'] = $request->file('image')->store('items', 'public');
         }

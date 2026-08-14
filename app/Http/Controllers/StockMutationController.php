@@ -31,7 +31,7 @@ class StockMutationController extends Controller
             $query->whereDate('created_at', '<=', $request->string('to'));
         }
 
-        $mutations = $query->orderByDesc('created_at')->paginate(20)->withQueryString();
+        $mutations = $query->orderByDesc('created_at')->paginate(request('per_page', 20))->withQueryString();
 
         return view('mutations.index', [
             'mutations' => $mutations,

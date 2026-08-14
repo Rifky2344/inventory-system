@@ -31,7 +31,7 @@ class LoginRequest extends FormRequest
             RateLimiter::hit($this->throttleKey());
 
             throw ValidationException::withMessages([
-                'email' => trans('auth.failed'),
+                'email' => 'Alamat Email atau Kata Sandi yang Anda masukkan salah.',
             ]);
         }
 

@@ -29,7 +29,7 @@ class ItemController extends Controller
             $query->where('category_id', $request->string('category_id'));
         }
 
-        $items = $query->orderBy('name')->paginate(20)->withQueryString();
+        $items = $query->orderBy('name')->paginate(request('per_page', 20))->withQueryString();
 
         return ItemResource::collection($items);
     }

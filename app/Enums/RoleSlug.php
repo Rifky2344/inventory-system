@@ -7,6 +7,7 @@ enum RoleSlug: string
     case SUPER_ADMIN = 'super-admin';
     case ADMIN = 'admin';
     case STAFF_GUDANG = 'staff-gudang';
+    case SALES = 'sales';
 
     public function label(): string
     {
@@ -14,6 +15,7 @@ enum RoleSlug: string
             self::SUPER_ADMIN => 'Super Admin',
             self::ADMIN => 'Admin',
             self::STAFF_GUDANG => 'Staff Gudang',
+            self::SALES => 'Sales',
         };
     }
 }

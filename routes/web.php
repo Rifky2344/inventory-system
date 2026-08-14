@@ -7,9 +7,17 @@ use App\Http\Controllers\Admin\ActivityLogController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\ItemController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Admin\CustomerController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\StockMutationController;
-use App\Http\Controllers\StockTransactionController;
+
+use App\Http\Controllers\WarehouseOrderController;
+use App\Http\Controllers\Sales\SalesVisitController;
+use App\Http\Controllers\Sales\InvoiceController;
+use App\Http\Controllers\Finance\PaymentController;
+use App\Http\Controllers\Finance\InstallmentPlanController;
+use App\Http\Controllers\InventoryExportController;
+use App\Http\Controllers\AttendanceController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -21,7 +29,7 @@ Route::get('/', function () {
 
     return in_array($role, ['admin', 'super-admin'], true)
         ? redirect()->route('dashboard')
-        : redirect()->route('transactions.index');
+        : redirect()->route('warehouse-orders.index');
 });
 
 Route::middleware('guest')->group(function () {
@@ -38,9 +46,17 @@ Route::middleware('guest')->group(function () {
 Route::middleware('auth')->group(function () {
     Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
 
+    Route::get('/profile', [\App\Http\Controllers\ProfileController::class, 'edit'])->name('profile.edit');
+    Route::put('/profile', [\App\Http\Controllers\ProfileController::class, 'update'])->name('profile.update');
+    Route::put('/profile/password', [\App\Http\Controllers\ProfileController::class, 'updatePassword'])->name('profile.password');
     Route::get('/dashboard', DashboardController::class)
         ->middleware('role:super-admin,admin')
         ->name('dashboard');
+
+    // Attendance Routes (All authenticated users)
+    Route::get('/attendances', [AttendanceController::class, 'index'])->name('attendances.index');
+    Route::get('/attendances/create', [AttendanceController::class, 'create'])->name('attendances.create');
+    Route::post('/attendances', [AttendanceController::class, 'store'])->name('attendances.store');
 
     // Staff Gudang (read-only + input transaksi)
     Route::middleware('role:staff-gudang,admin,super-admin')->group(function () {
@@ -51,14 +67,9 @@ Route::middleware('auth')->group(function () {
 
         Route::get('/categories', [CategoryController::class, 'index'])->name('categories.index');
 
-        Route::get('/transactions', [StockTransactionController::class, 'index'])->name('transactions.index');
-        Route::get('/transactions/{transaction}', [StockTransactionController::class, 'show'])
-            ->whereUuid('transaction')
-            ->name('transactions.show');
-        Route::get('/transactions/in/create', [StockTransactionController::class, 'createIn'])->name('transactions.in.create');
-        Route::post('/transactions/in', [StockTransactionController::class, 'storeIn'])->name('transactions.in.store');
-        Route::get('/transactions/out/create', [StockTransactionController::class, 'createOut'])->name('transactions.out.create');
-        Route::post('/transactions/out', [StockTransactionController::class, 'storeOut'])->name('transactions.out.store');
+        Route::get('/warehouse-orders', [WarehouseOrderController::class, 'index'])->name('warehouse-orders.index');
+        Route::get('/warehouse-orders/{warehouse_order}', [WarehouseOrderController::class, 'show'])->name('warehouse-orders.show');
+        Route::post('/warehouse-orders/{warehouse_order}/process', [WarehouseOrderController::class, 'process'])->name('warehouse-orders.process');
     });
 
     // Admin & Super Admin
@@ -75,6 +86,7 @@ Route::middleware('auth')->group(function () {
             ->whereUuid('category')
             ->name('categories.destroy');
 
+        Route::get('/items/export', [InventoryExportController::class, 'items'])->name('items.export');
         Route::get('/items/create', [ItemController::class, 'create'])->name('items.create');
         Route::post('/items', [ItemController::class, 'store'])->name('items.store');
         Route::get('/items/{item}/edit', [ItemController::class, 'edit'])
@@ -87,24 +99,37 @@ Route::middleware('auth')->group(function () {
             ->whereUuid('item')
             ->name('items.destroy');
 
-        Route::get('/transactions/{transaction}/edit', [StockTransactionController::class, 'edit'])
-            ->whereUuid('transaction')
-            ->name('transactions.edit');
-        Route::get('/transactions/export', [StockTransactionController::class, 'export'])
-            ->name('transactions.export');
-        Route::put('/transactions/{transaction}', [StockTransactionController::class, 'update'])
-            ->whereUuid('transaction')
-            ->name('transactions.update');
-        Route::delete('/transactions/{transaction}', [StockTransactionController::class, 'destroy'])
-            ->whereUuid('transaction')
-            ->name('transactions.destroy');
 
         Route::get('/mutations', [StockMutationController::class, 'index'])->name('mutations.index');
-        Route::get('/mutations/export', [StockMutationController::class, 'export'])
+        Route::get('/mutations/export', [InventoryExportController::class, 'mutations'])
             ->name('mutations.export');
         Route::get('/mutations/{mutation}', [StockMutationController::class, 'show'])
             ->whereUuid('mutation')
             ->name('mutations.show');
+    });
+
+    // ERP Routes - Customer Management (Admin & Super Admin)
+    Route::middleware('role:admin,super-admin')->group(function () {
+        Route::get('/customers/export', [InventoryExportController::class, 'customers'])->name('customers.export');
+        Route::resource('customers', CustomerController::class);
+    });
+
+    // ERP Routes - Sales (Sales & Admin & Super Admin)
+    Route::middleware('role:sales,admin,super-admin')->group(function () {
+        Route::get('/sales-visits/export', [InventoryExportController::class, 'salesVisits'])->name('sales-visits.export');
+        Route::resource('sales-visits', SalesVisitController::class);
+
+        Route::get('/invoices/export', [InventoryExportController::class, 'invoices'])->name('invoices.export');
+        Route::resource('invoices', InvoiceController::class);
+    });
+
+    // ERP Routes - Finance (Admin & Super Admin)
+    Route::middleware('role:admin,super-admin')->group(function () {
+        Route::get('/payments/export', [InventoryExportController::class, 'payments'])->name('payments.export');
+        Route::resource('payments', PaymentController::class, ['only' => ['index', 'create', 'store', 'show', 'destroy']]);
+
+        Route::get('/installment-plans/export', [InventoryExportController::class, 'installments'])->name('installment-plans.export');
+        Route::resource('installment-plans', InstallmentPlanController::class, ['only' => ['index', 'show', 'update']]);
     });
 
     // Super Admin only

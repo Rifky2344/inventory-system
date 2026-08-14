@@ -10,7 +10,7 @@ class CategoryUpdateRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string', 'max:255'],
-            'parent_id' => ['nullable', 'uuid', 'exists:categories,id'],
+            'category_code' => ['nullable', 'string', 'max:50', \Illuminate\Validation\Rule::unique('categories')->ignore($this->route('category'))],
             'description' => ['nullable', 'string'],
         ];
     }

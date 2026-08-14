@@ -35,7 +35,7 @@ class StockTransactionController extends Controller
         $transactions = $query
             ->orderByDesc('transaction_date')
             ->orderByDesc('created_at')
-            ->paginate(20)
+            ->paginate(request('per_page', 20))
             ->withQueryString();
 
         return StockTransactionResource::collection($transactions);

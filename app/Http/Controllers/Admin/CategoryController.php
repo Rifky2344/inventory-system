@@ -18,19 +18,15 @@ class CategoryController extends Controller
         $q = trim((string) $request->query('q', ''));
 
         $categories = Category::query()
-            ->with('parent')
             ->when($q !== '', function ($query) use ($q) {
                 $query->where(function ($query) use ($q) {
                     $query
                         ->where('name', 'like', "%{$q}%")
-                        ->orWhere('description', 'like', "%{$q}%")
-                        ->orWhereHas('parent', function ($query) use ($q) {
-                            $query->where('name', 'like', "%{$q}%");
-                        });
+                        ->orWhere('description', 'like', "%{$q}%");
                 });
             })
             ->orderBy('name')
-            ->paginate(15)
+            ->paginate(request('per_page', 15))
             ->withQueryString();
 
         return view('categories.index', [
@@ -41,9 +37,7 @@ class CategoryController extends Controller
 
     public function create(): View
     {
-        return view('categories.create', [
-            'parents' => Category::query()->orderBy('name')->get(),
-        ]);
+        return view('categories.create');
     }
 
     public function store(CategoryStoreRequest $request): RedirectResponse
@@ -66,10 +60,6 @@ class CategoryController extends Controller
     {
         return view('categories.edit', [
             'category' => $category,
-            'parents' => Category::query()
-                ->whereKeyNot($category->getKey())
-                ->orderBy('name')
-                ->get(),
         ]);
     }
 
@@ -91,11 +81,6 @@ class CategoryController extends Controller
 
     public function destroy(Request $request, Category $category): RedirectResponse
     {
-        if ($category->children()->exists()) {
-            return back()->withErrors([
-                'category' => 'Kategori tidak bisa dihapus karena masih memiliki sub-kategori.',
-            ]);
-        }
 
         if ($category->items()->exists()) {
             return back()->withErrors([

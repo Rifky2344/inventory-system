@@ -30,7 +30,7 @@ class ActivityLogController extends Controller
                 });
             })
             ->orderByDesc('created_at')
-            ->paginate(20)
+            ->paginate(request('per_page', 20))
             ->withQueryString();
 
         return view('activity-logs.index', [

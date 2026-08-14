@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-#[Fillable(['name', 'parent_id', 'description'])]
+#[Fillable(['name', 'category_code', 'description'])]
 class Category extends Model
 {
     use HasFactory, HasUuids, SoftDeletes;
@@ -19,15 +19,7 @@ class Category extends Model
 
     protected $keyType = 'string';
 
-    public function parent(): BelongsTo
-    {
-        return $this->belongsTo(self::class, 'parent_id');
-    }
 
-    public function children(): HasMany
-    {
-        return $this->hasMany(self::class, 'parent_id');
-    }
 
     public function items(): HasMany
     {

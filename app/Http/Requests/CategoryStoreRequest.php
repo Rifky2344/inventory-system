@@ -10,7 +10,7 @@ class CategoryStoreRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string', 'max:255'],
-            'parent_id' => ['nullable', 'uuid', 'exists:categories,id'],
+            'category_code' => ['nullable', 'string', 'max:50', 'unique:categories,category_code'],
             'description' => ['nullable', 'string'],
         ];
     }

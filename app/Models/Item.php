@@ -33,4 +33,9 @@ class Item extends Model
     {
         return $this->hasMany(StockMutation::class);
     }
+
+    public function invoiceItems(): HasMany
+    {
+        return $this->hasMany(InvoiceItem::class);
+    }
 }
