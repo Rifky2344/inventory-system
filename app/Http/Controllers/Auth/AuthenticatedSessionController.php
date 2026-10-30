@@ -31,9 +31,12 @@ class AuthenticatedSessionController extends Controller
         ]);
 
         $role = $request->user()?->role?->slug;
-        $fallback = in_array($role, ['super-admin', 'admin'], true)
-            ? route('dashboard')
-            : route('transactions.index');
+        $fallback = match ($role) {
+            'super-admin', 'admin' => route('dashboard'),
+            'staff-gudang' => route('warehouse-orders.index'),
+            'sales' => route('invoices.index'),
+            default => route('attendances.index'),
+        };
 
         return redirect()->intended($fallback);
     }
@@ -50,8 +53,9 @@ class AuthenticatedSessionController extends Controller
         Auth::guard('web')->logout();
 
         $request->session()->invalidate();
+
         $request->session()->regenerateToken();
 
-        return redirect()->route('login');
+        return redirect('/login');
     }
 }

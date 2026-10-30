@@ -27,9 +27,12 @@ Route::get('/', function () {
 
     $role = auth()->user()->role?->slug;
 
-    return in_array($role, ['admin', 'super-admin'], true)
-        ? redirect()->route('dashboard')
-        : redirect()->route('warehouse-orders.index');
+    return match ($role) {
+        'admin', 'super-admin' => redirect()->route('dashboard'),
+        'staff-gudang' => redirect()->route('warehouse-orders.index'),
+        'sales' => redirect()->route('invoices.index'),
+        default => redirect()->route('attendances.index'),
+    };
 });
 
 Route::middleware('guest')->group(function () {

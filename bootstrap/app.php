@@ -20,9 +20,12 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->redirectUsersTo(function (Request $request) {
             $role = $request->user()?->role?->slug;
 
-            return in_array($role, ['admin', 'super-admin'], true)
-                ? route('dashboard')
-                : route('attendances.index');
+            return match ($role) {
+                'super-admin', 'admin' => route('dashboard'),
+                'staff-gudang' => route('warehouse-orders.index'),
+                'sales' => route('invoices.index'),
+                default => route('attendances.index'),
+            };
         });
     })
     ->withExceptions(function (Exceptions $exceptions): void {
