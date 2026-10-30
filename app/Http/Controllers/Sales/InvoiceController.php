@@ -60,13 +60,18 @@ class InvoiceController extends Controller
         }
 
         // Generate invoice number
-        $today = now()->format('Ymd');
-        $count = Invoice::whereDate('created_at', now())->count() + 1;
-        $data['invoice_number'] = Invoice::formatNumber(now(), $count);
+        if (!empty($data['is_auto_invoice'])) {
+            $today = now()->format('Ymd');
+            $count = Invoice::whereDate('created_at', now())->count() + 1;
+            $data['invoice_number'] = Invoice::formatNumber(now(), $count);
+        } else {
+            $data['invoice_number'] = $data['invoice_number'];
+        }
 
         // Calculate totals
         $items = $data['items'];
         unset($data['items']);
+        unset($data['is_auto_invoice']);
 
         $subtotal = 0;
         foreach ($items as $item) {
@@ -78,6 +83,8 @@ class InvoiceController extends Controller
         $data['paid_amount'] = 0;
         $data['remaining_amount'] = $subtotal;
         $data['payment_status'] = Invoice::STATUS_UNPAID;
+        $data['is_installment'] = false;
+        $data['installment_count'] = 0;
 
         $invoice = DB::transaction(function () use ($data, $items, $request, $subtotal) {
             $invoice = Invoice::create($data);
@@ -90,27 +97,6 @@ class InvoiceController extends Controller
                     'unit_price' => $item['unit_price'],
                     'subtotal' => $item['qty'] * $item['unit_price'],
                 ]);
-            }
-
-            if ($invoice->is_installment && (int) $invoice->installment_count > 0) {
-                $installmentCount = (int) $invoice->installment_count;
-                $baseNominal = round($subtotal / $installmentCount, 2);
-                $accumulated = 0;
-
-                for ($number = 1; $number <= $installmentCount; $number++) {
-                    $nominal = $number === $installmentCount ? round($subtotal - $accumulated, 2) : $baseNominal;
-                    $accumulated += $nominal;
-
-                    InstallmentPlan::create([
-                        'invoice_id' => $invoice->id,
-                        'installment_number' => $number,
-                        'due_date' => Carbon::parse($invoice->invoice_date)->addMonthsNoOverflow($number),
-                        'nominal' => $nominal,
-                        'paid_amount' => 0,
-                        'remaining_amount' => $nominal,
-                        'status' => InstallmentPlan::STATUS_PENDING,
-                    ]);
-                }
             }
 
             ActivityLog::create([
@@ -141,10 +127,6 @@ class InvoiceController extends Controller
 
     public function destroy(Invoice $invoice)
     {
-        if ($invoice->payment_status !== Invoice::STATUS_UNPAID) {
-            return back()->with('error', 'Hanya invoice unpaid yang bisa dihapus');
-        }
-
         $invoice->delete();
 
         return redirect()->route('invoices.index')

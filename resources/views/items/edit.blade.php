@@ -57,8 +57,9 @@
                     <!-- Right Column -->
                     <div class="space-y-6">
                         <div>
-                            <label class="block text-sm font-bold text-slate-700 mb-2" for="category_id">Kategori <span class="text-rose-500">*</span></label>
-                            <select id="category_id" name="category_id" required class="w-full rounded-2xl border border-slate-200/70 bg-white py-3.5 px-4 text-slate-700 font-medium focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all shadow-sm cursor-pointer">
+                            <label class="block text-sm font-bold text-slate-700 mb-2" for="category_id">Kategori</label>
+                            <select id="category_id" name="category_id" class="w-full rounded-2xl border border-slate-200/70 bg-white py-3.5 px-4 text-slate-700 font-medium focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all shadow-sm cursor-pointer">
+                                <option value="" @selected(old('category_id', $item->category_id) == null)>Tanpa Kategori</option>
                                 @foreach ($categories as $c)
                                     <option value="{{ $c->id }}" @selected(old('category_id', $item->category_id) == $c->id)>{{ $c->name }}</option>
                                 @endforeach

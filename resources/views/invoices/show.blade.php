@@ -332,7 +332,7 @@
                     </h3>
 
                     <div class="flex flex-col gap-3">
-                        @if ($invoice->payment_status === 'Unpaid')
+                        @if (in_array(auth()->user()->role?->slug, ['admin', 'super-admin']))
                             <form method="POST" action="{{ route('invoices.destroy', $invoice) }}" onsubmit="return confirm('Apakah Anda yakin ingin menghapus invoice ini secara permanen? Seluruh data terkait akan hilang.')" class="w-full">
                                 @csrf
                                 @method('DELETE')
@@ -341,10 +341,6 @@
                                     Hapus Invoice
                                 </button>
                             </form>
-                        @else
-                            <div class="w-full p-4 rounded-2xl bg-slate-50 border border-slate-100 text-center">
-                                <p class="text-xs font-medium text-slate-500 leading-relaxed">Invoice yang sudah memiliki riwayat pembayaran tidak dapat dihapus untuk menjaga integritas data keuangan.</p>
-                            </div>
                         @endif
                     </div>
                     

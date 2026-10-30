@@ -22,7 +22,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
             return in_array($role, ['admin', 'super-admin'], true)
                 ? route('dashboard')
-                : route('transactions.index');
+                : route('attendances.index');
         });
     })
     ->withExceptions(function (Exceptions $exceptions): void {

@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-#[Fillable(['name', 'sku', 'category_id', 'unit', 'description', 'image_path'])]
+#[Fillable(['name', 'sku', 'category_id', 'unit', 'description', 'image_path', 'stock'])]
 class Item extends Model
 {
     use HasFactory, HasUuids, SoftDeletes;

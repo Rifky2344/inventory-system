@@ -8,6 +8,18 @@
 
             @if (in_array(auth()->user()->role?->slug, ['admin', 'super-admin'], true))
                 <div class="flex flex-wrap gap-3">
+                    <form action="{{ route('categories.import') }}" method="POST" enctype="multipart/form-data" class="inline">
+                        @csrf
+                        <input type="file" name="file" id="categoryImportFile" class="hidden" accept=".xlsx, .csv" onchange="this.form.submit()">
+                        <button type="button" onclick="document.getElementById('categoryImportFile').click()" class="group relative inline-flex items-center justify-center gap-2 overflow-hidden rounded-2xl bg-white px-5 py-3 font-bold text-slate-600 border border-slate-200 hover:border-sky-200 hover:bg-sky-50 hover:text-sky-700 transition-all duration-300 shadow-sm focus:outline-none focus:ring-4 focus:ring-sky-500/10">
+                            <svg class="w-5 h-5 transition-transform group-hover:-translate-y-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+                            Import Excel
+                        </button>
+                    </form>
+                    <a href="{{ route('categories.import-template') }}" class="group relative inline-flex items-center justify-center gap-2 overflow-hidden rounded-2xl bg-white px-5 py-3 font-bold text-slate-600 border border-slate-200 hover:border-violet-200 hover:bg-violet-50 hover:text-violet-700 transition-all duration-300 shadow-sm focus:outline-none focus:ring-4 focus:ring-violet-500/10">
+                        <svg class="w-5 h-5 transition-transform group-hover:scale-110" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                        Template
+                    </a>
                     <a href="{{ route('categories.create') }}" class="group relative inline-flex items-center justify-center gap-2 overflow-hidden rounded-2xl bg-gradient-to-br from-sky-500 to-indigo-600 px-5 py-3 font-bold text-white shadow-lg shadow-sky-500/30 transition-all duration-300 hover:scale-[1.02] hover:shadow-xl hover:shadow-sky-500/40 focus:outline-none focus:ring-4 focus:ring-sky-500/30">
                         <span class="absolute inset-0 bg-white/20 opacity-0 transition-opacity duration-300 group-hover:opacity-100"></span>
                         <svg class="w-5 h-5 transition-transform group-hover:rotate-90" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
@@ -23,6 +35,18 @@
         <div class="mb-6 p-4 rounded-xl bg-teal-50 border border-teal-100 text-teal-700 flex items-center gap-3">
             <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
             <span class="font-medium text-sm">{{ session('success') }}</span>
+        </div>
+    @endif
+    @if(session('warning'))
+        <div class="mb-6 p-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 flex items-center gap-3">
+            <svg class="w-5 h-5 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+            <span class="font-medium text-sm">{{ session('warning') }}</span>
+        </div>
+    @endif
+    @if(session('error'))
+        <div class="mb-6 p-4 rounded-xl bg-rose-50 border border-rose-100 text-rose-700 flex items-center gap-3">
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            <span class="font-medium text-sm">{{ session('error') }}</span>
         </div>
     @endif
     @if($errors->any())

@@ -54,9 +54,11 @@ Route::middleware('auth')->group(function () {
         ->name('dashboard');
 
     // Attendance Routes (All authenticated users)
+    Route::get('/attendances/export', [InventoryExportController::class, 'attendances'])->name('attendances.export');
     Route::get('/attendances', [AttendanceController::class, 'index'])->name('attendances.index');
     Route::get('/attendances/create', [AttendanceController::class, 'create'])->name('attendances.create');
     Route::post('/attendances', [AttendanceController::class, 'store'])->name('attendances.store');
+    Route::get('/attendances/{attendance}', [AttendanceController::class, 'show'])->name('attendances.show');
 
     // Staff Gudang (read-only + input transaksi)
     Route::middleware('role:staff-gudang,admin,super-admin')->group(function () {
@@ -76,6 +78,8 @@ Route::middleware('auth')->group(function () {
     Route::middleware('role:admin,super-admin')->group(function () {
         Route::get('/categories/create', [CategoryController::class, 'create'])->name('categories.create');
         Route::post('/categories', [CategoryController::class, 'store'])->name('categories.store');
+        Route::post('/categories/import', [\App\Http\Controllers\Admin\DataImportController::class, 'categories'])->name('categories.import');
+        Route::get('/categories/import-template', [\App\Http\Controllers\Admin\DataImportController::class, 'categoriesTemplate'])->name('categories.import-template');
         Route::get('/categories/{category}/edit', [CategoryController::class, 'edit'])
             ->whereUuid('category')
             ->name('categories.edit');
@@ -87,6 +91,8 @@ Route::middleware('auth')->group(function () {
             ->name('categories.destroy');
 
         Route::get('/items/export', [InventoryExportController::class, 'items'])->name('items.export');
+        Route::post('/items/import', [\App\Http\Controllers\Admin\DataImportController::class, 'items'])->name('items.import');
+        Route::get('/items/import-template', [\App\Http\Controllers\Admin\DataImportController::class, 'itemsTemplate'])->name('items.import-template');
         Route::get('/items/create', [ItemController::class, 'create'])->name('items.create');
         Route::post('/items', [ItemController::class, 'store'])->name('items.store');
         Route::get('/items/{item}/edit', [ItemController::class, 'edit'])

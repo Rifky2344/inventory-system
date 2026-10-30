@@ -14,6 +14,7 @@ use App\Models\SalesVisit;
 use App\Models\Invoice;
 use App\Models\Payment;
 use App\Models\InstallmentPlan;
+use App\Models\Attendance;
 
 class InventoryExportController extends Controller
 {
@@ -234,7 +235,7 @@ class InventoryExportController extends Controller
         $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
         
-        $headers = ['Tanggal Visit', 'Sales', 'Customer', 'Tujuan', 'Hasil/Catatan', 'Status Follow Up', 'Tanggal Follow Up'];
+        $headers = ['Tanggal Visit', 'Sales', 'Customer', 'Hasil Visit', 'Catatan', 'Status Follow Up'];
         $colIndex = 'A';
         foreach ($headers as $header) {
             $sheet->setCellValue($colIndex . '1', $header);
@@ -246,10 +247,9 @@ class InventoryExportController extends Controller
             $sheet->setCellValue('A' . $rowNum, optional($v->visit_date)->format('Y-m-d'));
             $sheet->setCellValue('B' . $rowNum, $v->sales?->name);
             $sheet->setCellValue('C' . $rowNum, $v->customer?->name);
-            $sheet->setCellValue('D' . $rowNum, $v->purpose);
-            $sheet->setCellValue('E' . $rowNum, $v->notes);
-            $sheet->setCellValue('F' . $rowNum, statusLabel($v->follow_up_status));
-            $sheet->setCellValue('G' . $rowNum, optional($v->next_follow_up_date)->format('Y-m-d'));
+            $sheet->setCellValue('D' . $rowNum, $v->visit_result);
+            $sheet->setCellValue('E' . $rowNum, $v->note);
+            $sheet->setCellValue('F' . $rowNum, $v->follow_up_status);
             $rowNum++;
         }
 
@@ -462,5 +462,35 @@ class InventoryExportController extends Controller
         }
 
         return $this->streamExcel($spreadsheet, 'installments_' . now()->format('Ymd_His') . '.xlsx');
+    }
+
+    public function attendances(Request $request)
+    {
+        $user = auth()->user();
+        if (in_array($user->role?->slug, ['admin', 'super-admin'])) {
+            $attendances = Attendance::with('user.role')->orderBy('check_in_time', 'desc')->get();
+        } else {
+            $attendances = Attendance::with('user.role')->where('user_id', $user->id)->orderBy('check_in_time', 'desc')->get();
+        }
+
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        
+        $headers = ['Waktu Absen', 'Nama Pegawai', 'Role'];
+        $colIndex = 'A';
+        foreach ($headers as $header) {
+            $sheet->setCellValue($colIndex . '1', $header);
+            $colIndex++;
+        }
+
+        $rowNum = 2;
+        foreach ($attendances as $a) {
+            $sheet->setCellValue('A' . $rowNum, optional($a->check_in_time)->format('Y-m-d H:i:s'));
+            $sheet->setCellValue('B' . $rowNum, $a->user?->name);
+            $sheet->setCellValue('C' . $rowNum, $a->user?->role?->name);
+            $rowNum++;
+        }
+
+        return $this->streamExcel($spreadsheet, 'attendances_' . now()->format('Ymd_His') . '.xlsx');
     }
 }

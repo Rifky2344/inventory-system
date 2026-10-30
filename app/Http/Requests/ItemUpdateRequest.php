@@ -14,7 +14,7 @@ class ItemUpdateRequest extends FormRequest
         return [
             'name' => ['required', 'string', 'max:255'],
             'sku' => ['required', 'string', 'max:255', Rule::unique('items', 'sku')->ignore($itemId)],
-            'category_id' => ['required', 'uuid', 'exists:categories,id'],
+            'category_id' => ['nullable', 'uuid', 'exists:categories,id'],
             'unit' => ['required', 'string', 'max:50'],
             'description' => ['nullable', 'string'],
             'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],

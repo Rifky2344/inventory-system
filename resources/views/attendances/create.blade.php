@@ -30,8 +30,12 @@
         <div class="bg-white/80 backdrop-blur-xl border border-white/60 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.06)] overflow-hidden relative">
             <div class="absolute top-0 inset-x-0 h-2 bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-400"></div>
             
-            <form action="{{ route('attendances.store') }}" method="POST" enctype="multipart/form-data" class="p-8 sm:p-10">
+            <form id="attendanceForm" action="{{ route('attendances.store') }}" method="POST" enctype="multipart/form-data" class="p-8 sm:p-10">
                 @csrf
+                <input type="hidden" name="local_time" id="local_time">
+                <input type="hidden" name="timezone" id="timezone">
+                
+                <!-- The rest of the form is unchanged but I need to make sure the JS is updated -->
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
                     <div class="space-y-2">
@@ -115,6 +119,21 @@
                 dropzone.classList.remove('border-emerald-400', 'bg-emerald-50/50');
             }
         }
+
+        // Set local time and timezone before submit
+        document.getElementById('attendanceForm').addEventListener('submit', function() {
+            document.getElementById('timezone').value = Intl.DateTimeFormat().resolvedOptions().timeZone;
+            
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            
+            document.getElementById('local_time').value = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+        });
 
         function clearFile() {
             const input = document.getElementById('photo');

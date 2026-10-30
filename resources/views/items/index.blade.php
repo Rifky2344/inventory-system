@@ -8,6 +8,18 @@
 
             @if (in_array(auth()->user()->role?->slug, ['admin', 'super-admin'], true))
                 <div class="flex flex-wrap gap-3">
+                    <form action="{{ route('items.import') }}" method="POST" enctype="multipart/form-data" class="inline">
+                        @csrf
+                        <input type="file" name="file" id="itemImportFile" class="hidden" accept=".xlsx, .csv" onchange="this.form.submit()">
+                        <button type="button" onclick="document.getElementById('itemImportFile').click()" class="group relative inline-flex items-center justify-center gap-2 overflow-hidden rounded-2xl bg-white px-5 py-3 font-bold text-slate-600 border border-slate-200 hover:border-sky-200 hover:bg-sky-50 hover:text-sky-700 transition-all duration-300 shadow-sm focus:outline-none focus:ring-4 focus:ring-sky-500/10">
+                            <svg class="w-5 h-5 transition-transform group-hover:-translate-y-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+                            Import Excel
+                        </button>
+                    </form>
+                    <a href="{{ route('items.import-template') }}" class="group relative inline-flex items-center justify-center gap-2 overflow-hidden rounded-2xl bg-white px-5 py-3 font-bold text-slate-600 border border-slate-200 hover:border-violet-200 hover:bg-violet-50 hover:text-violet-700 transition-all duration-300 shadow-sm focus:outline-none focus:ring-4 focus:ring-violet-500/10">
+                        <svg class="w-5 h-5 transition-transform group-hover:scale-110" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                        Template
+                    </a>
                     <a href="{{ route('items.export', request()->query()) }}" class="group relative inline-flex items-center justify-center gap-2 overflow-hidden rounded-2xl bg-white px-5 py-3 font-bold text-slate-600 border border-slate-200 hover:border-emerald-200 hover:bg-emerald-50 hover:text-emerald-700 transition-all duration-300 shadow-sm focus:outline-none focus:ring-4 focus:ring-emerald-500/10">
                         <svg class="w-5 h-5 transition-transform group-hover:-translate-y-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                         Export
@@ -21,6 +33,40 @@
             @endif
         </div>
     </div>
+
+    <!-- Flash Messages -->
+    @if(session('success'))
+        <div class="mb-6 p-4 rounded-2xl bg-emerald-50/80 backdrop-blur-md border border-emerald-200/60 text-emerald-800 flex items-center gap-3 shadow-sm">
+            <div class="p-2 bg-emerald-100 rounded-xl text-emerald-600 shadow-sm shrink-0">
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+            </div>
+            <span class="font-medium text-sm">{{ session('success') }}</span>
+        </div>
+    @endif
+    @if(session('warning'))
+        <div class="mb-6 p-4 rounded-2xl bg-amber-50/80 backdrop-blur-md border border-amber-200/60 text-amber-800 flex items-center gap-3 shadow-sm">
+            <div class="p-2 bg-amber-100 rounded-xl text-amber-600 shadow-sm shrink-0">
+                <svg class="w-5 h-5 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+            </div>
+            <span class="font-medium text-sm">{{ session('warning') }}</span>
+        </div>
+    @endif
+    @if(session('error'))
+        <div class="mb-6 p-4 rounded-2xl bg-rose-50/80 backdrop-blur-md border border-rose-200/60 text-rose-800 flex items-center gap-3 shadow-sm">
+            <div class="p-2 bg-rose-100 rounded-xl text-rose-600 shadow-sm shrink-0">
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </div>
+            <span class="font-medium text-sm">{{ session('error') }}</span>
+        </div>
+    @endif
+    @if($errors->any())
+        <div class="mb-6 p-4 rounded-2xl bg-rose-50/80 backdrop-blur-md border border-rose-200/60 text-rose-800 flex items-center gap-3 shadow-sm">
+            <div class="p-2 bg-rose-100 rounded-xl text-rose-600 shadow-sm shrink-0">
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </div>
+            <span class="font-medium text-sm">{{ $errors->first() }}</span>
+        </div>
+    @endif
 
     <!-- Modern Filter Form -->
     <div class="mb-6 bg-white/70 backdrop-blur-xl border border-white/60 rounded-3xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] relative z-20">

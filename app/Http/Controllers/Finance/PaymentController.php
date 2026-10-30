@@ -206,18 +206,6 @@ class PaymentController extends Controller
     {
         $invoice = $payment->invoice;
 
-        // Revert payment from invoice
-        $invoice->paid_amount -= $payment->amount;
-        $invoice->remaining_amount += $payment->amount;
-
-        if ($invoice->remaining_amount === (float) $invoice->total_amount) {
-            $invoice->payment_status = Invoice::STATUS_UNPAID;
-        } else if ($invoice->paid_amount > 0) {
-            $invoice->payment_status = Invoice::STATUS_PARTIALLY_PAID;
-        }
-
-        $invoice->save();
-
         // If this payment was applied to an installment, revert that installment too (best-effort)
         if (!empty($payment->installment_number)) {
             $installment = InstallmentPlan::where('invoice_id', $invoice->id)
@@ -225,12 +213,14 @@ class PaymentController extends Controller
                 ->first();
 
             if ($installment) {
-                $installment->paid_amount -= $payment->amount;
-                $installment->remaining_amount += $payment->amount;
+                $installment->paid_amount = max(0, (float) $installment->paid_amount - (float) $payment->amount);
+                $installment->remaining_amount = max(0, (float) $installment->nominal - (float) $installment->paid_amount);
 
-                if ($installment->remaining_amount === (float) $installment->nominal) {
+                if ($installment->paid_amount <= 0) {
                     $installment->status = InstallmentPlan::STATUS_PENDING;
-                } else if ($installment->paid_amount > 0) {
+                } elseif ($installment->remaining_amount <= 0) {
+                    $installment->status = InstallmentPlan::STATUS_PAID;
+                } else {
                     $installment->status = InstallmentPlan::STATUS_PARTIALLY_PAID;
                 }
 
@@ -239,6 +229,21 @@ class PaymentController extends Controller
         }
 
         $payment->delete();
+
+        // Recalculate invoice amounts directly from actual remaining payments in database
+        $totalPaid = (float) $invoice->payments()->sum('amount');
+        $invoice->paid_amount = $totalPaid;
+        $invoice->remaining_amount = max(0, (float) $invoice->total_amount - $totalPaid);
+
+        if ($invoice->paid_amount <= 0) {
+            $invoice->payment_status = Invoice::STATUS_UNPAID;
+        } elseif ($invoice->remaining_amount <= 0) {
+            $invoice->payment_status = Invoice::STATUS_PAID;
+        } else {
+            $invoice->payment_status = Invoice::STATUS_PARTIALLY_PAID;
+        }
+
+        $invoice->save();
 
         return redirect()->route('invoices.show', $invoice)
             ->with('success', 'Pembayaran berhasil dihapus');

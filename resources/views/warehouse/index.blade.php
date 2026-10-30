@@ -30,12 +30,13 @@
                         <th class="px-6 py-4 font-semibold">Pelanggan</th>
                         <th class="px-6 py-4 font-semibold">Jenis</th>
                         <th class="px-6 py-4 font-semibold">Item & Qty</th>
-                        <th class="px-6 py-4 font-semibold text-right">Status</th>
+                        <th class="px-6 py-4 font-semibold text-center">Status</th>
+                        <th class="px-6 py-4 font-semibold text-right">Aksi</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
                     @forelse($orders as $order)
-                        <tr class="hover:bg-slate-50/50 transition-colors cursor-pointer" onclick="window.location='{{ route('warehouse-orders.show', $order) }}'">
+                        <tr class="hover:bg-slate-50/50 transition-colors">
                             <td class="px-6 py-4">
                                 <div class="font-bold text-slate-800">{{ $order->invoice_number }}</div>
                                 <div class="text-xs text-slate-500 mt-1">{{ $order->invoice_date->format('d M Y') }}</div>
@@ -60,7 +61,7 @@
                                     @endforeach
                                 </ul>
                             </td>
-                            <td class="px-6 py-4 text-right">
+                            <td class="px-6 py-4 text-center">
                                 @if($order->status === 'pending')
                                     <span class="inline-flex px-3 py-1 text-xs font-bold rounded-full bg-slate-100 text-slate-600 border border-slate-200">Pending</span>
                                 @elseif($order->status === 'processing')
@@ -68,6 +69,14 @@
                                 @else
                                     <span class="inline-flex px-3 py-1 text-xs font-bold rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200">Selesai</span>
                                 @endif
+                            </td>
+                            <td class="px-6 py-4 text-right">
+                                <a href="{{ route('warehouse-orders.show', $order) }}"
+                                   class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 bg-white text-xs font-bold text-slate-500 hover:text-teal-600 hover:bg-teal-50 hover:border-teal-200 transition-all shadow-sm"
+                                   title="Lihat Detail">
+                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                                    Detail
+                                </a>
                             </td>
                         </tr>
                     @empty

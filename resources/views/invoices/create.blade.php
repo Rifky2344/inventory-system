@@ -88,40 +88,29 @@
                             </div>
                         </div>
 
-                        <!-- Payment Method / Installments -->
+                        <!-- Invoice Numbering -->
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 col-span-1 md:col-span-2 bg-slate-50/50 p-5 rounded-3xl border border-slate-100">
                             <div>
-                                <label class="block text-sm font-bold text-slate-700 mb-2">Metode Pelunasan <span class="text-rose-500">*</span></label>
-                                <div class="relative">
-                                    <select name="is_installment" id="isInstallmentSelect" required
-                                        class="w-full rounded-2xl border border-slate-200/70 bg-white py-3.5 pl-4 pr-10 text-slate-700 font-medium focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10 transition-all shadow-sm appearance-none cursor-pointer">
-                                        <option value="0" {{ old('is_installment', '0') == '0' ? 'selected' : '' }}>Bayar Penuh Sekaligus (1x)</option>
-                                        <option value="1" {{ old('is_installment') == '1' ? 'selected' : '' }}>Sistem Cicilan (Termin)</option>
-                                    </select>
-                                    <div class="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none">
-                                        <svg class="w-5 h-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-                                    </div>
+                                <label class="block text-sm font-bold text-slate-700 mb-2">Penomoran Invoice <span class="text-rose-500">*</span></label>
+                                <div class="flex items-center mt-3">
+                                    <input type="hidden" name="is_auto_invoice" value="0">
+                                    <input type="checkbox" id="is_auto_invoice" name="is_auto_invoice" value="1" {{ old('is_auto_invoice', '1') == '1' ? 'checked' : '' }}
+                                        class="w-5 h-5 rounded border-slate-300 text-teal-600 focus:ring-teal-500 transition-all cursor-pointer">
+                                    <label for="is_auto_invoice" class="ml-3 text-sm font-semibold text-slate-600 cursor-pointer">
+                                        Generate Nomor Otomatis
+                                    </label>
                                 </div>
-                                <p class="mt-2 text-xs text-slate-500 font-medium">Atur ke cicilan untuk menghasilkan rencana pembayaran bertahap.</p>
-                                @error('is_installment')<p class="mt-2 text-xs font-bold text-rose-500">{{ $message }}</p>@enderror
+                                <p class="mt-2 text-xs text-slate-500 font-medium">Hapus centang untuk memasukkan nomor invoice secara manual.</p>
+                                @error('is_auto_invoice')<p class="mt-2 text-xs font-bold text-rose-500">{{ $message }}</p>@enderror
                             </div>
 
-                            <div id="installmentCountWrap" class="transition-all duration-300 {{ old('is_installment') == '1' ? '' : 'hidden opacity-0 pointer-events-none' }}">
-                                <label class="block text-sm font-bold text-slate-700 mb-2">Jumlah Termin Cicilan <span class="text-rose-500">*</span></label>
+                            <div id="manualInvoiceNumberWrap" class="transition-all duration-300 {{ old('is_auto_invoice', '1') == '1' ? 'hidden opacity-0 pointer-events-none' : '' }}">
+                                <label class="block text-sm font-bold text-slate-700 mb-2">Nomor Invoice Manual <span class="text-rose-500">*</span></label>
                                 <div class="relative">
-                                    <select name="installment_count"
-                                        class="w-full rounded-2xl border border-slate-200/70 bg-white py-3.5 pl-4 pr-10 text-slate-700 font-medium focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10 transition-all shadow-sm appearance-none cursor-pointer">
-                                        <option value="" disabled selected>-- Tentukan Termin --</option>
-                                        @for($n = 2; $n <= 12; $n++)
-                                            <option value="{{ $n }}" {{ old('installment_count') == $n ? 'selected' : '' }}>{{ $n }} Kali Termin / Cicilan</option>
-                                        @endfor
-                                    </select>
-                                    <div class="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none">
-                                        <svg class="w-5 h-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-                                    </div>
+                                    <input type="text" name="invoice_number" value="{{ old('invoice_number') }}" placeholder="Contoh: INV-2023-XYZ"
+                                        class="w-full rounded-2xl border border-slate-200/70 bg-white py-3.5 px-4 text-slate-700 font-medium focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10 transition-all shadow-sm" />
                                 </div>
-                                <p class="mt-2 text-xs text-slate-500 font-medium">Contoh: 3 termin berarti dibagi 3x pelunasan.</p>
-                                @error('installment_count')<p class="mt-2 text-xs font-bold text-rose-500">{{ $message }}</p>@enderror
+                                @error('invoice_number')<p class="mt-2 text-xs font-bold text-rose-500">{{ $message }}</p>@enderror
                             </div>
                         </div>
 
@@ -350,20 +339,23 @@
         updateRowHandlers();
         updateCalculations();
 
-        function toggleInstallmentCount() {
-            const enabled = isInstallmentSelect.value === '1';
+        const isAutoInvoice = document.getElementById('is_auto_invoice');
+        const manualInvoiceNumberWrap = document.getElementById('manualInvoiceNumberWrap');
+
+        function toggleManualInvoiceNumber() {
+            const isAuto = isAutoInvoice.checked;
             
-            if (enabled) {
-                installmentCountWrap.classList.remove('hidden', 'opacity-0', 'pointer-events-none');
+            if (!isAuto) {
+                manualInvoiceNumberWrap.classList.remove('hidden', 'opacity-0', 'pointer-events-none');
             } else {
-                installmentCountWrap.classList.add('hidden', 'opacity-0', 'pointer-events-none');
-                const countSelect = installmentCountWrap.querySelector('select[name="installment_count"]');
-                if (countSelect) countSelect.value = '';
+                manualInvoiceNumberWrap.classList.add('hidden', 'opacity-0', 'pointer-events-none');
+                const invoiceInput = manualInvoiceNumberWrap.querySelector('input[name="invoice_number"]');
+                if (invoiceInput) invoiceInput.value = '';
             }
         }
 
-        isInstallmentSelect.addEventListener('change', toggleInstallmentCount);
+        isAutoInvoice.addEventListener('change', toggleManualInvoiceNumber);
         // Run once on load to handle old() validation state
-        toggleInstallmentCount();
+        toggleManualInvoiceNumber();
     </script>
 </x-app-layout>

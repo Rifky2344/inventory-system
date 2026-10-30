@@ -59,8 +59,8 @@ class ItemController extends Controller
         $data = $request->validated();
 
         if ($request->boolean('auto_sku')) {
-            $category = Category::find($data['category_id']);
-            $prefix = $category->category_code ?: 'ITM';
+            $category = !empty($data['category_id']) ? Category::find($data['category_id']) : null;
+            $prefix = $category?->category_code ?: 'ITM';
             
             // Get latest SKU with this prefix to determine the next number
             $latest = Item::where('sku', 'like', $prefix . '-%')
